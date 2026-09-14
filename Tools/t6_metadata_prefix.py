@@ -57,7 +57,7 @@ class PrefixReader:
         return value
 
 
-def inspect_prefix(data: bytes) -> dict:
+def prefix_reader(data: bytes):
     index = inspect(data)
     if not index['records'] or index['records'][0]['type_id'] != 52:
         raise ValueError('unsupported first asset type; expected observed PS3 profile 52')
@@ -67,7 +67,10 @@ def inspect_prefix(data: bytes) -> dict:
     virtual_limit = struct.unpack_from('>I', data, 28)[0]
     # The 40-byte XFile and 24-byte TEMP XAssetList are not VIRTUAL allocations.
     # This profile assumes no pre-asset allocations in other blocks.
-    reader = PrefixReader(data, start, start - 64, virtual_limit)
+    return index, PrefixReader(data, start, start - 64, virtual_limit)
+
+
+def read_metadata(reader):
     name_pointer, count, pairs_pointer = reader.words(3)  # TEMP struct
     if name_pointer != 0xffffffff:
         raise ValueError('metadata name must be an inline string')
@@ -76,7 +79,7 @@ def inspect_prefix(data: bytes) -> dict:
         raise ValueError('unresolved metadata entry table pointer')
     if not count and pairs_pointer:
         raise ValueError('non-null empty metadata entry table')
-    if count > (len(data) - reader.offset) // 12:
+    if count > (len(reader.data) - reader.offset) // 12:
         raise ValueError('truncated metadata entry table')
     if count:
         reader.reserve(count * 12, alignment=4)
@@ -85,6 +88,13 @@ def inspect_prefix(data: bytes) -> dict:
         {'key_hash': key, 'namespace_hash': namespace, 'value': reader.string(pointer)}
         for key, namespace, pointer in raw_entries
     ]
+    return {'name': name, 'entries': entries}
+
+
+def inspect_prefix(data: bytes) -> dict:
+    index, reader = prefix_reader(data)
+    start = reader.offset
+    metadata = read_metadata(reader)
     next_asset = None
     if len(index['records']) > 1:
         next_asset = {'index': 1, 'type_id': index['records'][1]['type_id'], 'file_offset': reader.offset}
@@ -92,7 +102,7 @@ def inspect_prefix(data: bytes) -> dict:
         'schema': 1,
         'profile': 'experimental-ps3-type52-metadata-prefix',
         'source_sha256': hashlib.sha256(data).hexdigest(),
-        'metadata': {'name': name, 'entries': entries},
+        'metadata': metadata,
         'source_range': {'start': start, 'end_exclusive': reader.offset},
         'next_asset': next_asset,
         'complete_asset_conversion': False,

@@ -21,3 +21,13 @@ The reader consumed the first metadata layout of the supplied decoded Tranzit fi
 Synthetic tests cover aliases, truncation, unexpected types, non-inline asset references and declared VIRTUAL capacity. Private input and extracted metadata are not test fixtures and are not committed.
 
 There is no engine-execution comparison, general block relocation loader, verified PS3 asset enum, world geometry, collision, or runtime here. All output explicitly keeps complete conversion, geometry verification, and engine-semantics verification false.
+
+## Additional prefix layouts
+
+The extended prefix reader follows known inline records in table order and preserves shared string aliases between them. It currently recognizes:
+
+- Raw type 49: a name and three count/pointer pairs, followed by three arrays of big-endian uint32 values. The observed names identify texture lists. The semantic meaning of the three array categories is not yet established, so they remain numbered arrays in output.
+- Raw type 57: a name, vertex-capacity value and four runtime pointer fields. This is a descriptor only; buffer allocation sizes and pointer targets are not resolved.
+- Raw type 44: a name, column and row counts, string/hash cell pairs, and a uint16 lookup permutation. The PC StringTable layout is consistent with the observed serialized payload. Cross-asset aliases and all inline strings resolved in the inspected file; lookup indices form a complete permutation of the cells.
+
+On the supplied Tranzit payload, this reads six top-level records and stops at raw type 9. It does not skip the unsupported shader/material records or scan ahead to a supposed map. The three lists and the table remain local extracted data. This is a stronger serialization check than searching for recognizable strings, but does not establish runtime correctness.
