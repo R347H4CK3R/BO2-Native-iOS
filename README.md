@@ -8,6 +8,7 @@ The target is a self-contained native iOS game using locally converted BO2 conte
 
 - A read-only source inventory with streaming SHA-256 hashes and explicit conversion status.
 - A deterministic inspector for the declared big-endian T6 XAssetList in an already decoded XFile. It reads asset record types and serialized pointers; it does **not** resolve nested assets, geometry, or gameplay.
+- An experimental reader for a first-asset metadata layout observed in the PS3 Tranzit stream. It resolves inline strings and known virtual-block string aliases, then stops at the next unsupported asset. It is not a general PS3 type map or GameData converter.
 - Synthetic parser and source-preservation tests.
 - A macOS Actions workflow for these tests and Xcode/Simulator availability checks. This is not a game build or a gameplay test.
 
@@ -19,6 +20,7 @@ Python 3.12 or later, standard library only:
 python -m unittest discover -s Tools/tests -v
 python Tools/dump_inventory.py /path/to/PS3_GAME --report /private/output/source-inventory.json
 python Tools/t6_asset_index.py /private/input/zm_transit.ff.decoded --report /private/output/asset-index.json
+python -m Tools.t6_metadata_prefix /private/input/zm_transit.ff.decoded --report /private/output/metadata-prefix.json
 ```
 
 Do not place source dumps, keys, decoded content, converted GameData, or final content-bearing IPAs in this repository or Actions artifacts. The inventory tool rejects report destinations inside the dump or repository and refuses to overwrite existing reports.
