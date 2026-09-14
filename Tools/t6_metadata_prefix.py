@@ -22,6 +22,7 @@ class PrefixReader:
         self.virtual_offset = virtual_offset
         self.virtual_limit = virtual_limit
         self.strings = {}
+        self.references = {}
         self.reserve(0)
 
     def reserve(self, size, alignment=1):
@@ -37,6 +38,26 @@ class PrefixReader:
         values = struct.unpack_from(f'>{count}I', self.data, self.offset)
         self.offset += count * 4
         return values
+
+    def take(self, count):
+        if count < 0 or count > len(self.data) - self.offset:
+            raise ValueError('truncated byte array')
+        value = self.data[self.offset:self.offset + count]
+        self.offset += count
+        return value
+
+    def remember(self, kind, address, value):
+        pointer = (5 << 29) | (address + 1)
+        key = (kind, pointer)
+        if key in self.references:
+            raise ValueError(f'duplicate {kind} reference address')
+        self.references[key] = value
+
+    def reference(self, kind, pointer):
+        key = (kind, pointer)
+        if key not in self.references:
+            raise ValueError(f'unresolved {kind} reference 0x{pointer:08x}')
+        return self.references[key]
 
     def string(self, pointer):
         if pointer == 0:

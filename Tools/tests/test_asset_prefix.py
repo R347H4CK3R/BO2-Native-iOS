@@ -12,7 +12,7 @@ def reader(data, capacity=10000):
 class PrefixIntegrationTests(unittest.TestCase):
     def fixture(self):
         body = struct.pack('>6I', 0, 0, 0, 0, 5, 0xffffffff)
-        body += b''.join(struct.pack('>2I', kind, 0xffffffff) for kind in (52, 49, 57, 44, 9))
+        body += b''.join(struct.pack('>2I', kind, 0xffffffff) for kind in (52, 49, 57, 44, 6))
         body += struct.pack('>3I', 0xffffffff, 0, 0) + b'zone\0'
         body += struct.pack('>7I', 0xffffffff, 1, 0xffffffff, 0, 0, 0, 0) + b'textures\0' + struct.pack('>I', 123)
         body += struct.pack('>6I', 0xffffffff, 100, *([0xffffffff] * 4)) + b'skin\0'
@@ -26,7 +26,7 @@ class PrefixIntegrationTests(unittest.TestCase):
         self.assertEqual(result['parsed_prefix_count'], 4)
         self.assertEqual(result['assets'][3]['payload']['cells'][0]['string'], 'zone')
         self.assertEqual(result['next_asset']['index'], 4)
-        self.assertEqual(result['next_asset']['type_id'], 9)
+        self.assertEqual(result['next_asset']['type_id'], 6)
         self.assertEqual(result['next_asset']['file_offset'], len(data))
         self.assertFalse(result['complete_asset_conversion'])
 

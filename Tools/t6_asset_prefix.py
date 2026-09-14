@@ -10,6 +10,8 @@ import struct
 
 from Tools.dump_inventory import write_report
 from Tools.t6_metadata_prefix import prefix_reader, read_metadata
+from Tools.t6_techniques import read_technique_set
+from Tools.t6_models import read_model_reference
 
 
 def inline_array(pointer, count):
@@ -69,6 +71,8 @@ def read_string_table(reader):
 
 
 READERS = {
+    5: ('model_dependency', read_model_reference),
+    9: ('technique_set', read_technique_set),
     52: ('metadata', read_metadata),
     49: ('three_uint32_lists', read_texture_list),
     57: ('skinned_runtime_descriptor', read_skinned_descriptor),

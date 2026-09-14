@@ -9,7 +9,7 @@ The target is a self-contained native iOS game using locally converted BO2 conte
 - A read-only source inventory with streaming SHA-256 hashes and explicit conversion status.
 - A deterministic inspector for the declared big-endian T6 XAssetList in an already decoded XFile. It reads asset record types and serialized pointers; it does **not** resolve nested assets, geometry, or gameplay.
 - An experimental reader for a first-asset metadata layout observed in the PS3 Tranzit stream. It resolves inline strings and known virtual-block string aliases, then stops at the next unsupported asset. It is not a general PS3 type map or GameData converter.
-- A reader for the following observed texture-list arrays, skinned-buffer descriptor, and configuration string table. Cross-asset string aliases are preserved; runtime buffers and subsequent shader/material assets remain unsupported.
+- Readers for observed texture-list arrays, skinned-buffer descriptors, configuration string tables, technique sets and model dependency descriptors. Shared aliases and cached/split PS3 shader payloads are preserved. Model geometry, physical relocations and Metal shader translation remain unimplemented.
 - Synthetic parser and source-preservation tests.
 - A macOS Actions workflow for these tests and Xcode/Simulator availability checks. This is not a game build or a gameplay test.
 

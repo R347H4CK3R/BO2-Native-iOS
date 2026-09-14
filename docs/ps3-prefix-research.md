@@ -12,11 +12,11 @@ The layout was compared with the KeyValuePairs and KeyValuePair definitions in t
 - In this limited profile, the pre-asset string and asset tables occupy the VIRTUAL block, so the initial VIRTUAL cursor is the asset-data file offset minus 64.
 - Asset headers consume TEMP bytes, not VIRTUAL bytes.
 - Alignment changes the allocated VIRTUAL offset; it does not automatically skip bytes in the serialized asset stream.
-- A VIRTUAL reference has block bits 5 and a low-bit offset encoded plus one. Only aliases to strings actually read by this reader can resolve.
+- A VIRTUAL reference has block bits 5 and a low-bit offset encoded plus one. Only aliases to values actually read with a compatible type can resolve. Shader asset aliases refer to their owning pass pointer slots; technique, declaration and literal aliases refer to allocations.
 
 ## Evidence and limits
 
-The reader consumed the first metadata layout of the supplied decoded Tranzit file, including two references back to its inline zone name. Its next cursor reaches a payload containing a texture-list name, but the structure of that subsequent asset is not implemented or verified.
+The first-metadata reader consumes the supplied decoded Tranzit file's initial metadata, including two references back to its inline zone name. The extended prefix reader continues across the layouts described below.
 
 Synthetic tests cover aliases, truncation, unexpected types, non-inline asset references and declared VIRTUAL capacity. Private input and extracted metadata are not test fixtures and are not committed.
 
@@ -30,4 +30,12 @@ The extended prefix reader follows known inline records in table order and prese
 - Raw type 57: a name, vertex-capacity value and four runtime pointer fields. This is a descriptor only; buffer allocation sizes and pointer targets are not resolved.
 - Raw type 44: a name, column and row counts, string/hash cell pairs, and a uint16 lookup permutation. The PC StringTable layout is consistent with the observed serialized payload. Cross-asset aliases and all inline strings resolved in the inspected file; lookup indices form a complete permutation of the cells.
 
-On the supplied Tranzit payload, this reads six top-level records and stops at raw type 9. It does not skip the unsupported shader/material records or scan ahead to a supposed map. The three lists and the table remain local extracted data. This is a stronger serialization check than searching for recognizable strings, but does not establish runtime correctness.
+## Techniques and model dependencies
+
+Raw type 9 uses a 136-byte TEMP header containing 32 technique pointers. Observed techniques use an 8-byte header followed by 40-byte pass records. Pass children load in vertex shader, declaration, pixel shader, arguments order; the technique name follows. Unknown pass flags are preserved without interpretation. The PS3 slot count and argument categories have supporting [technique asset research](https://codresearch.dev/index.php/Technique_Set_Asset), but public platform layouts must still be checked against the input.
+
+Cached pixel programs use the observed compressed or uncompressed size formula. The observed split variant (last descriptor byte 0x80) stores a program of 16*n+16 bytes followed by a 16-byte cached descriptor. Only that descriptor advances VIRTUAL; physical block placement remains unverified. Vertex program lengths use the low descriptor halfword times four. See the [pixel](https://codresearch.dev/index.php/Pixel_Shader_Asset) and [vertex](https://codresearch.dev/index.php/Vertex_Shader_Asset) structure references. The formulas are constrained to observed pointer arrangements rather than assumed to cover every shader. All bytes remain PS3 programs, with Metal translation explicitly unavailable.
+
+Raw type 5 support is limited to the observed 244-byte zero-filled dependency header with a name pointer. A comma-prefixed name identifies the requested dependency; populated models are rejected rather than treated as converted meshes. The general [BO2 model reference](https://codresearch.dev/index.php/XModel_Asset_(BO2)) is supporting research, not proof of the PS3 populated model layout.
+
+On the supplied decoded Tranzit payload, the reader consumes 487 declared records: 455 model dependencies, 26 technique sets and the six earlier metadata records. It preserves 298 unique populated shader programs (deduplicated by kind and name), including three split payloads. It stops at raw type 46 at byte 689506. Later shared aliases resolve across this prefix, corroborating serialization boundaries and VIRTUAL alignment. This does not establish rendering or gameplay correctness. Reports containing extracted names and bytes stay private.
