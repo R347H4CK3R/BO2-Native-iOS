@@ -1,0 +1,30 @@
+name: Source checks (not gameplay validation)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-checks:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test parsers and read-only inventory with synthetic inputs
+        run: python -m unittest discover -s Tools/tests -v
+      - name: Record Apple build and simulator tools
+        run: |
+          xcodebuild -version
+          xcrun --find metal
+          xcrun simctl list runtimes
+      - name: Explain validation scope
+        run: |
+          echo 'Synthetic parser tests only. No native BO2 runtime, real-content gameplay validation, or release IPA is implemented by this workflow.' >> "$GITHUB_STEP_SUMMARY"

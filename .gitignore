@@ -1,0 +1,21 @@
+# Source and converted retail data must live outside this repository.
+PS3_GAME/
+GameData/
+private-output/
+*.ff
+*.ipak
+*.sabs
+*.sabl
+*.iso
+*.pkg
+*.key
+*.decoded
+*.ipa
+*.app/
+*.zip
+__pycache__/
+*.pyc
+.DS_Store
+.build/
+build/
+DerivedData/
